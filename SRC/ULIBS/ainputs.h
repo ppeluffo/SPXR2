@@ -52,26 +52,24 @@ typedef struct {
 } ainputs_conf_t;
 
 void ainputs_init_outofrtos( SemaphoreHandle_t semph);
-void ainputs_update_local_config( ainputs_conf_t *ainputs_system_conf);
-void ainputs_read_local_config( ainputs_conf_t *ainputs_system_conf);
 void ainputs_init(uint8_t samples_count);
 void ainputs_awake(void);
 void ainputs_sleep(void);
-bool ainputs_config_channel( uint8_t ch, char *s_enable, char *s_aname,char *s_imin,char *s_imax,char *s_mmin,char *s_mmax,char *s_offset );
-void ainputs_config_defaults();
-void ainputs_print_configuration(void);
+
 uint16_t ainputs_read_channel_raw(uint8_t ch );
-float ainputs_read_channel_mag(uint8_t ch, uint16_t an_raw_val);
-void ainputs_read_channel ( uint8_t ch, float *mag, uint16_t *raw );
 void ainputs_prender_sensores(void);
 void ainputs_apagar_sensores(void);
-bool ainputs_test_read_channel( uint8_t ch );
 void ainputs_config_debug(bool debug );
 bool ainputs_read_debug(void);
-uint8_t ainputs_hash( void );
 
 void AINPUTS_ENTER_CRITICAL(void);
 void AINPUTS_EXIT_CRITICAL(void);
+
+void ainputs_config_defaults( ainputs_conf_t *ain);
+void ainputs_print_configuration(ainputs_conf_t *ain);
+bool ainputs_config_channel( ainputs_conf_t *ain, uint8_t ch, char *s_enable, char *s_aname,char *s_imin,char *s_imax,char *s_mmin,char *s_mmax,char *s_offset );
+uint8_t ainputs_hash( ainputs_conf_t *ain );
+void ainputs_read_channel ( ainputs_conf_t *ain, uint8_t ch, float *mag, uint16_t *raw );
 
 #ifdef	__cplusplus
 }

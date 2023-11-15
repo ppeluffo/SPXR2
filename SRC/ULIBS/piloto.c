@@ -1,5 +1,6 @@
 
 #include "piloto.h"
+#include "spxR2.h"
 #include <stdio.h>
 
 // Configurar ch_pA, ch_pB x cmd y por WAN
@@ -222,8 +223,7 @@ void plt_read_inputs( int8_t samples, uint16_t intervalo_secs )
 	 */
 
 uint8_t i;
-float mag;
-uint16_t raw;
+float mag = 0.0;
 
 	// Mido pA/pB
 	PLTCB.pA = 0.0;
@@ -233,13 +233,13 @@ uint16_t raw;
     
 	for ( i = 0; i < samples; i++) {
         
-        ainputs_read_channel ( PLTCB.ch_pA, &mag, &raw );
+ //       ainputs_read_channel ( systemConf.ainputs_conf, PLTCB.ch_pA, &mag, &raw );
         PLTCB.pA += mag;
         if (f_debug_piloto) {
             xprintf_P(PSTR("PILOTO READINPUTS: pA:[%d]->%0.3f\r\n"), i, mag );
         }
         
-        ainputs_read_channel ( PLTCB.ch_pB, &mag, &raw );
+ //       ainputs_read_channel ( systemConf.ainputs_conf, PLTCB.ch_pB, &mag, &raw );
         PLTCB.pB += mag;
         if (f_debug_piloto) {
             xprintf_P(PSTR("PILOTO READINPUTS: pB:[%d]->%0.3f\r\n"), i, mag );

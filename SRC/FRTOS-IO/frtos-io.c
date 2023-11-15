@@ -354,7 +354,7 @@ uint16_t i;
 	// Primero por las dudas borro el buffer de recepcion
     frtos_ioctl( fdRS485A_MODBUS, ioctl_UART_CLEAR_RX_BUFFER, NULL );
 	// Este delay es importante en modbus porque permite el turn-round. !!!
-	vTaskDelay( ( TickType_t)( 2 ) );
+	vTaskDelay( ( TickType_t)( 10 ) );
 	// RTS OFF: Habilita la recepcion del chip
 	CLEAR_RTS_RS485A();
     

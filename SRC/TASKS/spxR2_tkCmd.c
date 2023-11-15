@@ -14,6 +14,8 @@ static void cmdTestFunction(void);
 static void pv_snprintfP_OK(void );
 static void pv_snprintfP_ERR(void );
 static bool pv_cmd_modbus(void);
+static bool pv_ainputs_test_read_channel( uint8_t ch );
+static void pv_modbus_test_channel(char *s_channel );
 
 char rw_buffer[FF_RECD_SIZE];
 
@@ -96,7 +98,7 @@ fat_s l_fat;
 
 
     if (!strcmp_P( strupr(argv[1]), PSTR("MBUSHASH"))  ) {
-        modbus_hash( u_hash );
+        modbus_hash( &systemConf.modbus_conf, u_hash );
         //utest_modbus_hash();
         return;
     }
@@ -355,7 +357,7 @@ static void cmdReadFunction(void)
     // AINPUT
     // read ainput {n}
 	if (!strcmp_P( strupr(argv[1]), PSTR("AINPUT"))  ) {
-        ainputs_test_read_channel( atoi(argv[2]) ) ? pv_snprintfP_OK(): pv_snprintfP_ERR();
+        pv_ainputs_test_read_channel( atoi(argv[2]) ) ? pv_snprintfP_OK(): pv_snprintfP_ERR();
 		return;
 	}
     
@@ -500,9 +502,9 @@ fat_s l_fat;
     print_pwr_configuration();
     
     WAN_print_configuration();
-    ainputs_print_configuration();
-    counters_print_configuration();
-    modbus_print_configuration();
+    ainputs_print_configuration( &systemConf.ainputs_conf);
+    counters_print_configuration( &systemConf.counters_conf);
+    modbus_print_configuration(&systemConf.modbus_conf);
     
 #ifdef PILOTO
     piloto_print_configuration();
@@ -717,19 +719,19 @@ bool retS = false;
         
         //  enable{true/false}
         if ( strcmp_P ( strupr( argv[2]), PSTR("ENABLE")) == 0 ) {
-            modbus_config_enable (argv[3]) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
+            modbus_config_enable ( &systemConf.modbus_conf, argv[3]) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
             return;
         }
 
         // localaddr 
         if ( strcmp_P ( strupr( argv[2]), PSTR("LOCALADDR")) == 0 ) {
-            modbus_config_localaddr (argv[3]) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
+            modbus_config_localaddr ( &systemConf.modbus_conf, argv[3]) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
             return;
         }
 
         // channel {0..%d} name slaaddr regaddr nro_recds fcode type codec div_p10
         if ( strcmp_P ( strupr( argv[2]), PSTR("CHANNEL")) == 0 ) {
-            retS = modbus_config_channel( atoi(argv[3]), argv[4], argv[5], argv[6], argv[7], argv[8],argv[9],argv[10], argv[11],argv[12] );
+            retS = modbus_config_channel( &systemConf.modbus_conf, atoi(argv[3]), argv[4], argv[5], argv[6], argv[7], argv[8],argv[9],argv[10], argv[11],argv[12] );
             retS ? pv_snprintfP_OK() : pv_snprintfP_ERR();
             return;
         }
@@ -829,7 +831,7 @@ bool retS = false;
     // AINPUT
 	// ainput {0..%d} enable aname imin imax mmin mmax offset
 	if (!strcmp_P( strupr(argv[1]), PSTR("AINPUT")) ) {
-		ainputs_config_channel ( atoi(argv[2]), argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9]);
+		ainputs_config_channel ( &systemConf.ainputs_conf, atoi(argv[2]), argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9]);
         pv_snprintfP_OK();
 		return;
 	}
@@ -837,7 +839,7 @@ bool retS = false;
     // COUNTER
     // counter {0..%d} enable cname magPP modo(PULSO/CAUDAL),rbsize
 	if (!strcmp_P( strupr(argv[1]), PSTR("COUNTER")) ) {
-        counters_config_channel( atoi(argv[2]), argv[3], argv[4], argv[5], argv[6], argv[7]  );
+        counters_config_channel( &systemConf.counters_conf, atoi(argv[2]), argv[3], argv[4], argv[5], argv[6], argv[7]  );
         pv_snprintfP_OK();
 		return;
 	}
@@ -876,11 +878,52 @@ static bool pv_cmd_modbus(void)
     
     // modbus chpoll {ch}
 	if ( strcmp_P( strupr(argv[2]), PSTR("CHPOLL")) == 0 ) {
-		modbus_test_channel(argv[3] );
+		pv_modbus_test_channel(argv[3] );
 		return(true);
 	}
 
 	return(false);
+
+}
+//------------------------------------------------------------------------------
+static bool pv_ainputs_test_read_channel( uint8_t ch )
+{
+  
+float mag;
+uint16_t raw;
+
+    if ( ( ch == 0 ) || (ch == 1 ) || ( ch == 2) || ( ch == 99)) {
+        
+        ainputs_prender_sensores();
+        ainputs_read_channel ( &systemConf.ainputs_conf, ch, &mag, &raw );
+        xprintf_P(PSTR("AINPUT ch%d=%0.3f\r\n"), ch, mag);
+        ainputs_apagar_sensores();
+        return(true);
+    } else {
+        return(false);
+    }
+
+}
+//------------------------------------------------------------------------------
+static void pv_modbus_test_channel(char *s_channel )
+{
+	// Hace un poleo de un canal modbus definido en el datalogger
+
+uint8_t ch;
+
+	ch = atoi(s_channel);
+
+	if ( ch >= NRO_MODBUS_CHANNELS ) {
+		xprintf_P(PSTR("ERROR: Nro.canal < %d\r\n"), NRO_MODBUS_CHANNELS);
+		return;
+	}
+
+	if ( ! systemConf.modbus_conf.mbch[ch].enabled ) {
+		xprintf_P(PSTR("ERROR: Canal no definido (X)\r\n"));
+		return;
+	}
+
+	modbus_read_channel( &systemConf.modbus_conf, ch );
 
 }
 //------------------------------------------------------------------------------

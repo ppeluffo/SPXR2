@@ -115,18 +115,16 @@ void config_default(void)
     systemConf.pwr_hhmm_off = 630;
  
     // Actualizo las configuraciones locales a default
-    ainputs_config_defaults();
-    counters_config_defaults();
-    modbus_config_defaults();
+    ainputs_config_defaults(&systemConf.ainputs_conf);
+    counters_config_defaults(&systemConf.counters_conf);
+    modbus_config_defaults(&systemConf.modbus_conf);
     
 #ifdef PILOTO
     piloto_config_defaults();
 #endif
     
     // Actualizo las configuraciones locales en el systemConf
-    ainputs_read_local_config(&systemConf.ainputs_conf);
-    counters_read_local_config(&systemConf.counters_conf);
-    modbus_read_local_config(&systemConf.modbus_conf);
+//    modbus_read_local_config(&systemConf.modbus_conf);
     
 #ifdef PILOTO
     piloto_read_local_config(&systemConf.piloto_conf);

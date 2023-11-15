@@ -91,7 +91,7 @@ extern "C" {
 #include "piloto.h"
 
 #define FW_REV "1.1.0"
-#define FW_DATE "@ 20230726"
+#define FW_DATE "@ 20231115"
 #define HW_MODELO "SPXR2 FRTOS R001 HW:AVR128DA64"
 #define FRTOS_VERSION "FW:FreeRTOS V202111.00"
 #define FW_TYPE "SPXR2"

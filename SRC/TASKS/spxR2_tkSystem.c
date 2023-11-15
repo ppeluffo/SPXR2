@@ -32,7 +32,7 @@ uint8_t i;
     
     xprintf_P(PSTR("Starting tkSystem..\r\n"));
     
-    counters_init();
+    counters_init( &systemConf.counters_conf );
     counters_start_timer();
     
     ainputs_init(systemConf.samples_count);
@@ -139,7 +139,7 @@ bool retS = false;
     // ANALOG: Leo los 3 canales analogicos
     for ( channel = 0; channel < NRO_ANALOG_CHANNELS; channel++) {
         if ( systemConf.ainputs_conf.channel[channel].enabled ) {
-            ainputs_read_channel ( channel, &mag, &raw );
+            ainputs_read_channel ( &systemConf.ainputs_conf, channel, &mag, &raw );
             systemVars.ainputs[channel] = mag;
         }
     }
@@ -148,7 +148,7 @@ bool retS = false;
     if ( systemConf.ainputs_conf.channel[2].enabled ) {
         systemVars.battery = -1.0;
     } else{
-        ainputs_read_channel ( 99, &mag, &raw );
+        ainputs_read_channel ( &systemConf.ainputs_conf, 99, &mag, &raw );
         systemVars.battery = mag;
     }
     
@@ -156,12 +156,12 @@ bool retS = false;
     ainputs_apagar_sensores(); 
     
     // Leo el valor de los contadores
-    counters_read( systemVars.counters );
+    counters_read( systemVars.counters, &systemConf.counters_conf );
     counters_convergencia();
     counters_clear();
        
     // Leo los canales modbus 
-    modbus_read ( systemVars.modbus );
+    modbus_read ( &systemConf.modbus_conf, systemVars.modbus );
     
     // Armo el dr.
     memcpy(dataRcd->l_ainputs, systemVars.ainputs, sizeof(dataRcd->l_ainputs));
@@ -221,9 +221,13 @@ void counters_TimerCallback( TimerHandle_t xTimer )
 	// prendo el timer xTimer1X que termine el debounce.
    
 uint8_t cnt = 0;
+t_counter_modo modo_medida;
+float magpp;
     
     for (cnt=0; cnt < NRO_COUNTER_CHANNELS; cnt++) {
-        counter_FSM(cnt);
+        modo_medida = systemConf.counters_conf.channel[cnt].modo_medida;
+        magpp = systemConf.counters_conf.channel[cnt].magpp;
+        counter_FSM(cnt, modo_medida, magpp);
     }
 
 }

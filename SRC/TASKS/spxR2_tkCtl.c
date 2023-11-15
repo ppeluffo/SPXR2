@@ -32,9 +32,9 @@ fat_s l_fat;
     }
        
     // Actualizo las configuraciones locales en el systemConf
-    ainputs_update_local_config(&systemConf.ainputs_conf);
-    counters_update_local_config(&systemConf.counters_conf);
-    modbus_update_local_config(&systemConf.modbus_conf);
+//    ainputs_update_local_config(&systemConf.ainputs_conf);
+//    counters_update_local_config(&systemConf.counters_conf);
+//    modbus_update_local_config(&systemConf.modbus_conf);
 #ifdef PILOTO
     piloto_update_local_config(&systemConf.piloto_conf);
 #endif
@@ -86,8 +86,8 @@ void sys_watchdog_check(void)
 static uint16_t wdg_count = 0;
 
     //xprintf_P(PSTR("wdg reset\r\n"));
-    //wdt_reset();
-    //return;
+    wdt_reset();
+    return;
         
     // EL wdg lo leo cada 120secs ( 5 x 60 )
     if ( wdg_count++ <  (240 / TKCTL_DELAY_S ) ) {

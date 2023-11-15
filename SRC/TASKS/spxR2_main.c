@@ -10,6 +10,10 @@
  * para ver como se inicializan y se manejan.
  * 
  * 
+ *
+ * -----------------------------------------------------------------------------
+ * Version 1.1.0 @ 2023-11-15:
+ * Modbus: El caudalimentro Shinco tiene s/n 77 entonces el id es 119 !!!
  * -----------------------------------------------------------------------------
  * Version 1.1.0 @ 2023-07-21
  * Veo que hay veces que se cuelga o que tareas ocupan mas tiempo del esperable.

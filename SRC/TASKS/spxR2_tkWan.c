@@ -272,9 +272,9 @@ static void wan_state_online_config(void)
 #endif
     
     // Con todos los modulos configurados, los recargo
-    ainputs_read_local_config(&systemConf.ainputs_conf);
-    counters_read_local_config(&systemConf.counters_conf);
-    modbus_read_local_config(&systemConf.modbus_conf);
+//    ainputs_read_local_config(&systemConf.ainputs_conf);
+//    counters_read_local_config(&systemConf.counters_conf);
+//    modbus_read_local_config(&systemConf.modbus_conf);
 #ifdef PILOTO
     piloto_read_local_config(&systemConf.piloto_conf);
 #endif
@@ -750,7 +750,7 @@ uint8_t hash = 0;
         vTaskDelay( ( TickType_t)( 1 ) );
     
     memset(wan_tx_buffer, '\0', WAN_TX_BUFFER_SIZE);
-    hash = ainputs_hash();
+    hash = ainputs_hash(&systemConf.ainputs_conf);
     sprintf_P( (char*)&wan_tx_buffer, PSTR("ID=%s&TYPE=%s&VER=%s&CLASS=CONF_AINPUTS&HASH=0x%02X"), systemConf.dlgid, FW_TYPE, FW_REV, hash );
 
     // Proceso. Envio hasta 2 veces el frame y espero hasta 10s la respuesta
@@ -829,7 +829,7 @@ bool retS = false;
         vTaskDelay( ( TickType_t)( 10 / portTICK_PERIOD_MS ) );
         
 		memset( &str_base, '\0', sizeof(str_base) );
-		snprintf_P( str_base, sizeof(str_base), PSTR("A%d\0"), ch );
+		snprintf_P( str_base, sizeof(str_base), PSTR("A%d=\0"), ch );
 
 		if ( strstr( p, str_base) != NULL ) {
 			memset(localStr,'\0',sizeof(localStr));
@@ -845,7 +845,7 @@ bool retS = false;
 			tk_mMax = strsep(&stringp,delim);		//mMax
 			tk_offset = strsep(&stringp,delim);		//offset
 
-			ainputs_config_channel( ch, tk_enable, tk_name , tk_iMin, tk_iMax, tk_mMin, tk_mMax, tk_offset );
+			ainputs_config_channel( &systemConf.ainputs_conf, ch, tk_enable, tk_name , tk_iMin, tk_iMax, tk_mMin, tk_mMax, tk_offset );
 			xprintf_P( PSTR("WAN:: Reconfig A%d\r\n"), ch);
 		}
 	}
@@ -876,7 +876,7 @@ uint8_t hash = 0;
         vTaskDelay( ( TickType_t)( 1 ) );
     
     memset(wan_tx_buffer, '\0', WAN_TX_BUFFER_SIZE);
-    hash = counters_hash();
+    hash = counters_hash( &systemConf.counters_conf );
     sprintf_P( (char*)&wan_tx_buffer, PSTR("ID=%s&TYPE=%s&VER=%s&CLASS=CONF_COUNTERS&HASH=0x%02X"), systemConf.dlgid, FW_TYPE, FW_REV, hash );
 
     // Proceso. Envio hasta 2 veces el frame y espero hasta 10s la respuesta
@@ -956,7 +956,7 @@ bool retS = false;
         vTaskDelay( ( TickType_t)( 10 / portTICK_PERIOD_MS ) );
         
 		memset( &str_base, '\0', sizeof(str_base) );
-		snprintf_P( str_base, sizeof(str_base), PSTR("C%d"), ch );
+		snprintf_P( str_base, sizeof(str_base), PSTR("C%d="), ch );
 
 		if ( strstr( p, str_base) != NULL ) {
 			memset(localStr,'\0',sizeof(localStr));
@@ -971,7 +971,7 @@ bool retS = false;
             tk_rbsize = strsep(&stringp,delim);     //rbsize
 
             //xprintf_P(PSTR("DEBUG: ch=%d,enable=%s,name=%s magpp=%s,modo=%s,rbsize=%s\r\n"), ch, tk_enable, tk_name, tk_magpp, tk_modo, tk_rbsize);
-			counters_config_channel( ch , tk_enable, tk_name , tk_magpp, tk_modo, tk_rbsize );         
+			counters_config_channel( &systemConf.counters_conf, ch , tk_enable, tk_name , tk_magpp, tk_modo, tk_rbsize );         
 			xprintf_P( PSTR("WAN:: Reconfig C%d\r\n"), ch);
 		}
 	}
@@ -1004,7 +1004,7 @@ uint8_t hash = 0;
         vTaskDelay( ( TickType_t)( 1 ) );
     memset(wan_tx_buffer, '\0', WAN_TX_BUFFER_SIZE);
     
-    hash = modbus_hash(u_hash );
+    hash = modbus_hash( &systemConf.modbus_conf, u_hash );
     
     sprintf_P( (char*)&wan_tx_buffer, PSTR("ID=%s&TYPE=%s&VER=%s&CLASS=CONF_MODBUS&HASH=0x%02X"), systemConf.dlgid, FW_TYPE, FW_REV, hash );
 
@@ -1098,7 +1098,7 @@ bool retS = false;
         stringp = localStr;
         tk_enable = strsep(&stringp,delim);	 	// ENABLE
         tk_enable = strsep(&stringp,delim);	 	// TRUE/FALSE
-        modbus_config_enable(tk_enable);
+        modbus_config_enable( &systemConf.modbus_conf, tk_enable);
         xprintf_P( PSTR("WAN:: Reconfig MODBUS ENABLE to %s\r\n"), tk_enable );
     }
 
@@ -1110,7 +1110,7 @@ bool retS = false;
         stringp = localStr;
         tk_address = strsep(&stringp,delim);	 	// ENABLE
         tk_address = strsep(&stringp,delim);	 	// TRUE/FALSE
-        modbus_config_localaddr(tk_address);
+        modbus_config_localaddr(&systemConf.modbus_conf, tk_address);
         xprintf_P( PSTR("WAN:: Reconfig MODBUS LOCALADDR to %s\r\n"), tk_address );
     }
     
@@ -1121,14 +1121,14 @@ bool retS = false;
         
         vTaskDelay( ( TickType_t)( 10 / portTICK_PERIOD_MS ) );
 		memset( &str_base, '\0', sizeof(str_base) );
-		snprintf_P( str_base, sizeof(str_base), PSTR("M%d"), ch );
+		snprintf_P( str_base, sizeof(str_base), PSTR("M%d="), ch );
 
 		if ( strstr( p, str_base) != NULL ) {
 			memset(localStr,'\0',sizeof(localStr));
             ts = strstr( p, str_base);
 			strncpy( localStr, ts, sizeof(localStr));
 			stringp = localStr;
-			tk_enable = strsep(&stringp,delim);	//M0
+			tk_enable = strsep(&stringp,delim);	    //M0
             tk_enable = strsep(&stringp,delim);     //enable
 			tk_name = strsep(&stringp,delim);		//name
 			tk_sla = strsep(&stringp,delim);		//sla_address
@@ -1139,7 +1139,7 @@ bool retS = false;
 			tk_codec = strsep(&stringp,delim);		//codec
 			tk_pow10 = strsep(&stringp,delim);		//pow10
                     
-			modbus_config_channel( ch,
+			modbus_config_channel( &systemConf.modbus_conf, ch,
                     tk_enable, 
                     tk_name, 
                     tk_sla, 
@@ -1539,6 +1539,18 @@ char *p;
         xprintf_P(PSTR("WAN:: RESET MEMORY order from Server !!\r\n"));
         vTaskDelay( ( TickType_t)( 2000 / portTICK_PERIOD_MS ) );
         reset_memory_remote();
+    }
+
+    if ( strstr( p, "VOPEN") != NULL ) {
+        xprintf_P(PSTR("WAN:: OPEN VALVE from server !!\r\n"));
+        vTaskDelay( ( TickType_t)( 2000 / portTICK_PERIOD_MS ) );
+        valve_A_open();
+    }
+
+    if ( strstr( p, "VCLOSE") != NULL ) {
+        xprintf_P(PSTR("WAN:: CLOSE VALVE from server !!\r\n"));
+        vTaskDelay( ( TickType_t)( 2000 / portTICK_PERIOD_MS ) );
+        valve_A_close();
     }
     
     if ( strstr( p, "RESET") != NULL ) {

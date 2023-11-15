@@ -27,7 +27,11 @@ void tkPiloto(void * pvParameters)
 
 	vTaskDelay( ( TickType_t)( 500 / portTICK_PERIOD_MS ) );
     xprintf_P(PSTR("Starting tkPiloto..\r\n"));
-        
+    
+    // Inicialmente abro la valvula.
+    if ( ! piloto_configurado())
+        valve_A_open();
+    
 	for( ;; )
 	{
         /*

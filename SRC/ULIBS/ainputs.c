@@ -23,9 +23,6 @@ rBstruct_s ain_RB_0,ain_RB_1,ain_RB_2;
 
 static uint8_t max_rb_ain_storage_size;
 
-// Configuracion local del sistema analogico
-ainputs_conf_t ainputs_conf;
-
 static SemaphoreHandle_t ainputsLocalSem;
 
 // Semafor para acceder a medir los canales ( ainputs y pilotos )
@@ -45,28 +42,6 @@ void ainputs_init_outofrtos( SemaphoreHandle_t semph)
     sem_AINPUTS = xSemaphoreCreateMutexStatic( &AINPUTS_xMutexBuffer );
 }
 //------------------------------------------------------------------------------
-void ainputs_update_local_config( ainputs_conf_t *ainputs_system_conf)
-{
-    /*
-     * Copia la configuracion del systemConf en la local
-     */
-    while ( xSemaphoreTake( ainputsLocalSem, ( TickType_t ) 5 ) != pdTRUE )
-  		vTaskDelay( ( TickType_t)( 1 ) );
-    memcpy( ainputs_system_conf , &ainputs_conf, sizeof(ainputs_conf_t));
-    xSemaphoreGive( ainputsLocalSem );
-}
-//------------------------------------------------------------------------------
-void ainputs_read_local_config( ainputs_conf_t *ainputs_system_conf)
-{
-    /*
-     * Copia la configuracion local en el systemConf
-     */
-    while ( xSemaphoreTake( ainputsLocalSem, ( TickType_t ) 5 ) != pdTRUE )
-  		vTaskDelay( ( TickType_t)( 1 ) );
-    memcpy( &ainputs_conf, ainputs_system_conf, sizeof(ainputs_conf_t));
-    xSemaphoreGive( ainputsLocalSem );
-}
-//------------------------------------------------------------------------------    
 void ainputs_init(uint8_t samples_count)
 {
     /*
@@ -124,7 +99,7 @@ void ainputs_sleep(void)
     INA_sleep();
 }
 //------------------------------------------------------------------------------
-bool ainputs_config_channel( uint8_t ch, char *s_enable, char *s_aname,char *s_imin,char *s_imax,char *s_mmin,char *s_mmax,char *s_offset )
+bool ainputs_config_channel( ainputs_conf_t *ain, uint8_t ch, char *s_enable, char *s_aname,char *s_imin,char *s_imax,char *s_mmin,char *s_mmax,char *s_offset )
 {
 
 	/*
@@ -134,39 +109,45 @@ bool ainputs_config_channel( uint8_t ch, char *s_enable, char *s_aname,char *s_i
 
 bool retS = false;
 
+    //xprintf_P(PSTR("DEBUG: ch=%d,enable=%s,name=%s,imin=%s, imax=%s, mmin=%s,mmax=%s\r\n"),ch,s_enable,s_aname,s_imin,s_imax,s_mmin,s_mmax);
+
 	if ( s_aname == NULL ) {
 		return(retS);
 	}
 
+    
 	if ( ( ch >=  0) && ( ch < NRO_ANALOG_CHANNELS ) ) {
 
         // Enable ?
         if (!strcmp_P( strupr(s_enable), PSTR("TRUE"))  ) {
-            ainputs_conf.channel[ch].enabled = true;
+            ain->channel[ch].enabled = true;
+            //xprintf_P(PSTR("DEBUG enable\r\n"));
         } else if (!strcmp_P( strupr(s_enable), PSTR("FALSE"))  ) {
-            ainputs_conf.channel[ch].enabled = false;
+            ain->channel[ch].enabled = false;
+            //xprintf_P(PSTR("DEBUG disable\r\n"));
         }
         
-        snprintf_P( ainputs_conf.channel[ch].name, AIN_PARAMNAME_LENGTH, PSTR("%s"), s_aname );
+        //snprintf_P( ain->channel[ch].name, AIN_PARAMNAME_LENGTH, PSTR("%s"), s_aname );
+        strncpy( ain->channel[ch].name, s_aname, AIN_PARAMNAME_LENGTH );
 
 		if ( s_imin != NULL ) {
-			ainputs_conf.channel[ch].imin = atoi(s_imin);
+			ain->channel[ch].imin = atoi(s_imin);
 		}
 
 		if ( s_imax != NULL ) {
-			ainputs_conf.channel[ch].imax = atoi(s_imax);
+			ain->channel[ch].imax = atoi(s_imax);
 		}
 
 		if ( s_offset != NULL ) {
-			ainputs_conf.channel[ch].offset = atof(s_offset);
+			ain->channel[ch].offset = atof(s_offset);
 		}
 
 		if ( s_mmin != NULL ) {
-			ainputs_conf.channel[ch].mmin = atof(s_mmin);
+			ain->channel[ch].mmin = atof(s_mmin);
 		}
 
 		if ( s_mmax != NULL ) {
-			ainputs_conf.channel[ch].mmax = atof(s_mmax);
+			ain->channel[ch].mmax = atof(s_mmax);
 		}
 
 		retS = true;
@@ -175,7 +156,7 @@ bool retS = false;
 	return(retS);
 }
 //------------------------------------------------------------------------------
-void ainputs_config_defaults(void)
+void ainputs_config_defaults( ainputs_conf_t *ain )
 {
     	/*
          * Realiza la configuracion por defecto de los canales digitales.
@@ -184,18 +165,19 @@ void ainputs_config_defaults(void)
 uint8_t i = 0;
 
 	for ( i = 0; i < NRO_ANALOG_CHANNELS; i++) {
-        ainputs_conf.channel[i].enabled = false;
-		ainputs_conf.channel[i].imin = 0;
-		ainputs_conf.channel[i].imax = 20;
-		ainputs_conf.channel[i].mmin = 0.0;
-		ainputs_conf.channel[i].mmax = 10.0;
-		ainputs_conf.channel[i].offset = 0.0;
-		snprintf_P( ainputs_conf.channel[i].name, AIN_PARAMNAME_LENGTH, PSTR("X") );
+        ain->channel[i].enabled = false;
+		ain->channel[i].imin = 0;
+		ain->channel[i].imax = 20;
+		ain->channel[i].mmin = 0.0;
+		ain->channel[i].mmax = 10.0;
+		ain->channel[i].offset = 0.0;
+		//snprintf_P( ainputs_conf.channel[i].name, AIN_PARAMNAME_LENGTH, PSTR("X") );
+        strncpy( ain->channel[i].name, "X", AIN_PARAMNAME_LENGTH );
 	}
 
 }
 //------------------------------------------------------------------------------
-void ainputs_print_configuration(void)
+void ainputs_print_configuration(ainputs_conf_t *ain)
 {
     /*
      * Muestra la configuracion de todos los canales analogicos en la terminal
@@ -210,24 +192,24 @@ uint8_t i = 0;
 
 	for ( i = 0; i < NRO_ANALOG_CHANNELS; i++) {
         
-        if ( ainputs_conf.channel[i].enabled ) {
+        if ( ain->channel[i].enabled ) {
             xprintf_P( PSTR(" a%d: +"),i);
         } else {
             xprintf_P( PSTR(" a%d: -"),i);
         }
-        
+         
         xprintf_P( PSTR("[%s, %d-%d mA/ %.02f,%.02f | %.03f]\r\n"),
-            ainputs_conf.channel[i].name,
-            ainputs_conf.channel[i].imin,
-            ainputs_conf.channel[i].imax,
-            ainputs_conf.channel[i].mmin,
-            ainputs_conf.channel[i].mmax,
-            ainputs_conf.channel[i].offset
+            ain->channel[i].name,
+            ain->channel[i].imin,
+            ain->channel[i].imax,
+            ain->channel[i].mmin,
+            ain->channel[i].mmax,
+            ain->channel[i].offset
             );
     }
 }
 //------------------------------------------------------------------------------
-uint16_t ainputs_read_channel_raw(uint8_t ch )
+uint16_t ainputs_read_channel_raw( uint8_t ch )
 {
 
         /*
@@ -283,67 +265,7 @@ int8_t xBytes = 0;
 	return( an_raw_val );
 }
 //------------------------------------------------------------------------------
-float ainputs_read_channel_mag(uint8_t ch, uint16_t an_raw_val)
-{
-    /*
-     * Convierte el valor raw a la magnitud.
-     */
-    
-float an_mag_val = 0.0;
-float I = 0.0;
-float M = 0.0;
-float P = 0.0;
-uint16_t D = 0;
-
-    // Battery ??
-    if ( ch == 99 ) {
-        // Convierto el raw_value a la magnitud ( 8mV por count del A/D)
-        an_mag_val =  0.008 * an_raw_val;
-        if ( f_debug_ainputs ) {
-            xprintf_P(PSTR("ANALOG: A%d (RAW=%d), BATT=%.03f\r\n\0"), ch, an_raw_val, an_mag_val );
-        }
-        goto quit;
-    }
-    
-    
-	// Convierto el raw_value a corriente
-	I = (float) an_raw_val / INA_FACTOR;
-    
-	// Calculo la magnitud
-	P = 0;
-	D = ainputs_conf.channel[ch].imax - ainputs_conf.channel[ch].imin;
-	an_mag_val = 0.0;
-	if ( D != 0 ) {
-		// Pendiente
-		P = (float) ( ainputs_conf.channel[ch].mmax  -  ainputs_conf.channel[ch].mmin ) / D;
-		// Magnitud
-		M = (float) ( ainputs_conf.channel[ch].mmin + ( I - ainputs_conf.channel[ch].imin ) * P);
-
-		// Al calcular la magnitud, al final le sumo el offset.
-		an_mag_val = M + ainputs_conf.channel[ch].offset;
-		// Corrijo el 0 porque sino al imprimirlo con 2 digitos puede dar negativo
-		if ( fabs(an_mag_val) < 0.01 )
-			an_mag_val = 0.0;
-
-	} else {
-		// Error: denominador = 0.
-		an_mag_val = -999.0;
-	}
-
-    if ( f_debug_ainputs ) {
-        xprintf_P(PSTR("ANALOG: A%d (RAW=%d), I=%.03f\r\n\0"), ch, an_raw_val, I );
-        xprintf_P(PSTR("ANALOG: Imin=%d, Imax=%d\r\n\0"), ainputs_conf.channel[ch].imin, ainputs_conf.channel[ch].imax );
-        xprintf_P(PSTR("ANALOG: mmin=%.03f, mmax=%.03f\r\n\0"), ainputs_conf.channel[ch].mmin, ainputs_conf.channel[ch].mmax );
-        xprintf_P(PSTR("ANALOG: D=%d, P=%.03f, M=%.03f\r\n\0"), D, P, M );
-        xprintf_P(PSTR("ANALOG: an_raw_val=%d, an_mag_val=%.03f\r\n\0"), an_raw_val, an_mag_val );
-    }
-
-quit:
-        
-	return(an_mag_val);
-}
-//------------------------------------------------------------------------------
-void ainputs_read_channel ( uint8_t ch, float *mag, uint16_t *raw )
+void ainputs_read_channel ( ainputs_conf_t *ain, uint8_t ch, float *mag, uint16_t *raw )
 {
 	/*
 	Lee un canal analogico y devuelve el valor convertido a la magnitud configurada.
@@ -369,15 +291,64 @@ float an_mag_val = 0.0;
 //t_ain_s rb_element;
 //float avg;
 //uint8_t i;
+float I = 0.0;
+float M = 0.0;
+float P = 0.0;
+uint16_t D = 0;
+
 
 
     AINPUTS_ENTER_CRITICAL();
     
 	// Leo el valor del INA.(raw)
 	an_raw_val = ainputs_read_channel_raw( ch );
+ 
     // Lo convierto a la magnitud
-    an_mag_val = ainputs_read_channel_mag( ch, an_raw_val);
+    // Battery ??
+    if ( ch == 99 ) {
+        // Convierto el raw_value a la magnitud ( 8mV por count del A/D)
+        an_mag_val =  0.008 * an_raw_val;
+        if ( f_debug_ainputs ) {
+            xprintf_P(PSTR("ANALOG: A%d (RAW=%d), BATT=%.03f\r\n\0"), ch, an_raw_val, an_mag_val );
+        }
+        goto quit;
+    }
     
+    
+	// Convierto el raw_value a corriente
+	I = (float) an_raw_val / INA_FACTOR;
+    
+	// Calculo la magnitud
+	P = 0;
+	D = ain->channel[ch].imax - ain->channel[ch].imin;
+	an_mag_val = 0.0;
+	if ( D != 0 ) {
+		// Pendiente
+		P = (float) ( ain->channel[ch].mmax  -  ain->channel[ch].mmin ) / D;
+		// Magnitud
+		M = (float) ( ain->channel[ch].mmin + ( I - ain->channel[ch].imin ) * P);
+
+		// Al calcular la magnitud, al final le sumo el offset.
+		an_mag_val = M + ain->channel[ch].offset;
+		// Corrijo el 0 porque sino al imprimirlo con 2 digitos puede dar negativo
+		if ( fabs(an_mag_val) < 0.01 )
+			an_mag_val = 0.0;
+
+	} else {
+		// Error: denominador = 0.
+		an_mag_val = -999.0;
+	}
+
+    if ( f_debug_ainputs ) {
+        xprintf_P(PSTR("ANALOG: A%d (RAW=%d), I=%.03f\r\n\0"), ch, an_raw_val, I );
+        xprintf_P(PSTR("ANALOG: Imin=%d, Imax=%d\r\n\0"), ain->channel[ch].imin, ain->channel[ch].imax );
+        xprintf_P(PSTR("ANALOG: mmin=%.03f, mmax=%.03f\r\n\0"), ain->channel[ch].mmin, ain->channel[ch].mmax );
+        xprintf_P(PSTR("ANALOG: D=%d, P=%.03f, M=%.03f\r\n\0"), D, P, M );
+        xprintf_P(PSTR("ANALOG: an_raw_val=%d, an_mag_val=%.03f\r\n\0"), an_raw_val, an_mag_val );
+    }
+
+quit:
+        
     /*
     // Lo almaceno en el RB correspondiente
     rb_element.ain = an_mag_val;
@@ -487,25 +458,6 @@ int8_t sp;
     AINPUTS_EXIT_CRITICAL();
 }
 //------------------------------------------------------------------------------
-bool ainputs_test_read_channel( uint8_t ch )
-{
-  
-float mag;
-uint16_t raw;
-
-    if ( ( ch == 0 ) || (ch == 1 ) || ( ch == 2) || ( ch == 99)) {
-        
-        ainputs_prender_sensores();
-        ainputs_read_channel ( ch, &mag, &raw );
-        xprintf_P(PSTR("AINPUT ch%d=%0.3f\r\n"), ch, mag);
-        ainputs_apagar_sensores();
-        return(true);
-    } else {
-        return(false);
-    }
-
-}
-//------------------------------------------------------------------------------
 void ainputs_config_debug(bool debug )
 {
     if ( debug ) {
@@ -521,7 +473,7 @@ bool ainputs_read_debug(void)
     return (f_debug_ainputs);
 }
 //------------------------------------------------------------------------------
-uint8_t ainputs_hash( void )
+uint8_t ainputs_hash( ainputs_conf_t *ain )
 {
     
 uint8_t hash_buffer[32];
@@ -533,15 +485,15 @@ char *p;
     for(i=0; i<NRO_ANALOG_CHANNELS; i++) {
         memset(hash_buffer, '\0', sizeof(hash_buffer));
         j = 0;
-        if ( ainputs_conf.channel[i].enabled ) {
+        if ( ain->channel[i].enabled ) {
             j += sprintf_P( (char *)&hash_buffer[j], PSTR("[A%d:TRUE,"), i );
         } else {
             j += sprintf_P( (char *)&hash_buffer[j], PSTR("[A%d:FALSE,"), i );
         }
-        j += sprintf_P( (char *)&hash_buffer[j], PSTR("%s,"), ainputs_conf.channel[i].name );
-        j += sprintf_P( (char *)&hash_buffer[j], PSTR("%d,%d,"), ainputs_conf.channel[i].imin, ainputs_conf.channel[i].imax );
-        j += sprintf_P( (char *)&hash_buffer[j], PSTR("%.02f,%.02f,"), ainputs_conf.channel[i].mmin, ainputs_conf.channel[i].mmax );
-        j += sprintf_P( (char *)&hash_buffer[j], PSTR("%.02f]"), ainputs_conf.channel[i].offset);    
+        j += sprintf_P( (char *)&hash_buffer[j], PSTR("%s,"), ain->channel[i].name );
+        j += sprintf_P( (char *)&hash_buffer[j], PSTR("%d,%d,"), ain->channel[i].imin, ain->channel[i].imax );
+        j += sprintf_P( (char *)&hash_buffer[j], PSTR("%.02f,%.02f,"), ain->channel[i].mmin, ain->channel[i].mmax );
+        j += sprintf_P( (char *)&hash_buffer[j], PSTR("%.02f]"), ain->channel[i].offset);    
         p = (char *)hash_buffer;
         while (*p != '\0') {
             hash = u_hash(hash, *p++);

@@ -66,22 +66,20 @@ typedef struct {
 } counters_conf_t;
 
 void counters_init_outofrtos( SemaphoreHandle_t semph);
-void counters_update_local_config( counters_conf_t *counters_system_conf);
-void counters_read_local_config( counters_conf_t *counters_system_conf);
-void counters_init( void );
-void counters_config_defaults( void );
-void counters_print_configuration( void );
-bool counters_config_channel( uint8_t ch, char *s_enable, char *s_name, char *s_magpp, char *s_modo, char *s_rb_size );
+void counters_init( counters_conf_t *cnt );
+void counters_config_defaults( counters_conf_t *cnt );
+void counters_print_configuration( counters_conf_t *cnt );
+bool counters_config_channel( counters_conf_t *cnt, uint8_t ch, char *s_enable, char *s_name, char *s_magpp, char *s_modo, char *s_rb_size );
 void counters_config_debug(bool debug );
 bool counters_read_debug(void);
-void counter_FSM(uint8_t i );
+void counter_FSM( uint8_t i, t_counter_modo modo_medida, float magpp );
 void counters_clear(void);
 void counters_convergencia(void);
 uint8_t counters_read_pin(uint8_t cnt);
-void counters_read( float *l_counters );
+void counters_read( float *l_counters, counters_conf_t *cnt );
 uint8_t CNT0_read(void);
 uint8_t CNT1_read(void);
-uint8_t counters_hash( void );
+uint8_t counters_hash( counters_conf_t *cnt );
 
 void counters_test_rb(char *data);
 
