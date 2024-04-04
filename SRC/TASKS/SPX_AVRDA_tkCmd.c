@@ -1,5 +1,5 @@
 
-#include "spxR2.h"
+#include "SPX_AVRDA.h"
 #include "frtos_cmd.h"
 
 static void cmdClsFunction(void);
@@ -74,6 +74,13 @@ static void cmdTestFunction(void)
 
 dataRcd_s dr;
 fat_s l_fat;
+
+    // STACKS SIZE
+    if (!strcmp_P( strupr(argv[1]), PSTR("STACKS"))  ) {
+        u_check_stacks_usage();
+        pv_snprintfP_OK();
+        return;
+    }
 
     if (!strcmp_P( strupr(argv[1]), PSTR("FAT"))  ) {
         FAT_read(&l_fat);

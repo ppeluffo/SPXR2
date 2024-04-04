@@ -1,4 +1,4 @@
-#include "spxR2.h"
+#include "SPX_AVRDA.h"
 #include "frtos_cmd.h"
 #include "modbus.h"
         
@@ -161,22 +161,17 @@ BaseType_t xResult;
     } else {
     
         // Estoy en modo discreto o mixto en horario discreto
-        // Espero timerDial
-        if ( systemConf.timerdial >= 900 ) {
-            // Discreto
-            sleep_ticks = systemConf.timerdial;
-        } else {
-            // Mixto: Me conecto cada 1/2 hora
-            sleep_ticks = 1800;
-        }
+        sleep_ticks = systemConf.timerdial;
         //xprintf_P(PSTR("WAN:: DEBUG: pwrmodo discreto. Sleep %d secs.\r\n"), sleep_ticks );
         sleep_ticks /= 60;  // paso a minutos
+        //xprintf_P(PSTR("WAN:: DEBUG: pwrmodo discreto. Sleep %d mins.\r\n"), sleep_ticks );
         // Duermo
         while ( sleep_ticks-- > 0) {
             kick_wdt(XWAN_WDG_bp);
             // Espero de a 1 min para poder entrar en tickless.
-            //vTaskDelay( ( TickType_t)( 60000 / portTICK_PERIOD_MS ) );
+            // vTaskDelay( ( TickType_t)( 60000 / portTICK_PERIOD_MS ) );
             // Duermo monitoreando las señales.
+            //xprintf_P(PSTR("WAN:: DEBUG: sleep 1 min (%d).\r\n"), sleep_ticks );
 			xResult = xTaskNotifyWait( 0x00, ULONG_MAX, &ulNotifiedValue, ( TickType_t)( 60000 / portTICK_PERIOD_MS ) );
 			if ( xResult == pdTRUE ) {
 				if ( ( ulNotifiedValue & DATA_FRAME_READY ) != 0 ) {
@@ -184,6 +179,7 @@ BaseType_t xResult;
 					goto exit;
 				}
 			}
+            
         }
     }
     
@@ -742,7 +738,6 @@ uint8_t timeout = 0;
 bool retS = false;
 uint8_t hash = 0;
 
-
     xprintf_P(PSTR("WAN:: CONFIG_AINPUTS.\r\n"));
  
     // Armo el buffer
@@ -752,10 +747,12 @@ uint8_t hash = 0;
     memset(wan_tx_buffer, '\0', WAN_TX_BUFFER_SIZE);
     hash = ainputs_hash(&systemConf.ainputs_conf);
     sprintf_P( (char*)&wan_tx_buffer, PSTR("ID=%s&TYPE=%s&VER=%s&CLASS=CONF_AINPUTS&HASH=0x%02X"), systemConf.dlgid, FW_TYPE, FW_REV, hash );
-
+    
     // Proceso. Envio hasta 2 veces el frame y espero hasta 10s la respuesta
     tryes = 2;
     while (tryes-- > 0) {
+        
+        //xprintf_P(PSTR("DEBUG [%s]\r\n"), wan_tx_buffer);
         
         wan_xmit_out(DEBUG_WAN);
     
@@ -1570,7 +1567,9 @@ static void wan_xmit_out(bool debug_flag )
     
     // Antes de trasmitir siempre borramos el Rxbuffer
     lBchar_Flush(&wan_lbuffer);
-        
+      
+    //xprintf_P(PSTR("DEBUG [%s]\r\n"), wan_tx_buffer);
+    
     if ( systemConf.wan_port == WAN_RS485B ) {
         xfprintf_P( fdRS485B, PSTR("%s"), &wan_tx_buffer[0]);
     }

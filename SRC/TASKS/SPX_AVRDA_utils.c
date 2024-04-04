@@ -5,7 +5,7 @@
  * Created on 22 de diciembre de 2021, 07:34 AM
  */
 
-#include "spxR2.h"
+#include "SPX_AVRDA.h"
 #include "pines.h"
 
 //------------------------------------------------------------------------------
@@ -611,3 +611,31 @@ char *p;
 }
 //------------------------------------------------------------------------------
 
+void u_check_stacks_usage(void)
+{
+    /*
+     * Mide el stack de todas las tareas y lo informa
+     */
+    
+uint16_t uxHighWaterMark;
+
+    uxHighWaterMark = SPYuxTaskGetStackHighWaterMark( xHandle_tkCmd );
+    xprintf_P(PSTR("tkCMD stack = %d\r\n"), uxHighWaterMark );
+
+    uxHighWaterMark = SPYuxTaskGetStackHighWaterMark( xHandle_tkSys );
+    xprintf_P(PSTR("tkSYS stack = %d\r\n"), uxHighWaterMark );
+    
+    uxHighWaterMark = SPYuxTaskGetStackHighWaterMark( xHandle_tkRS485A );
+    xprintf_P(PSTR("tkRS485A stack = %d\r\n"), uxHighWaterMark );
+
+    uxHighWaterMark = SPYuxTaskGetStackHighWaterMark( xHandle_tkRS485B );
+    xprintf_P(PSTR("tkRS485B stack = %d\r\n"), uxHighWaterMark );
+
+    uxHighWaterMark = SPYuxTaskGetStackHighWaterMark( xHandle_tkWAN );
+    xprintf_P(PSTR("tkWAN stack = %d\r\n"), uxHighWaterMark );
+    
+    uxHighWaterMark = SPYuxTaskGetStackHighWaterMark( xHandle_tkPILOTO );
+    xprintf_P(PSTR("tkPILOTO stack = %d\r\n"), uxHighWaterMark );
+    
+}
+//------------------------------------------------------------------------------

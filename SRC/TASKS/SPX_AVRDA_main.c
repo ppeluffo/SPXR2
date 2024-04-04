@@ -10,7 +10,16 @@
  * para ver como se inicializan y se manejan.
  * 
  * 
- *
+ * -----------------------------------------------------------------------------
+ * Version 1.2.0 @ 20240401:
+ * 1- Cambio el nombre de SPXR2 a SPX_AVRDA
+ * 2- Hay problemas de reseteo cuando se configuran los canales analogicos.
+ *    Aumento el stack de tkWan a 512 y creo una funcion que monitorea los stacks.
+ *    La copio de la que hice en SPQ_AVRDA.
+ *    Agrego la funcion u_check_stacks_usage() y el comando 'test stacks'
+ * 3- Al configurar los canales analogicos se resetea. El problema esta en el 
+ *    tamaño del buffer del hash. Se aumenta a 64 bytes.
+ * 
  * -----------------------------------------------------------------------------
  * Version 1.1.0 @ 2023-11-15:
  * Modbus: El caudalimentro Shinco tiene s/n 77 entonces el id es 119 !!!
@@ -26,10 +35,9 @@
  * 
  * El problema esta en la funcion FLASH_0_read_eeprom_block.
  * La solución fue poner vTaskDelay( ( TickType_t)( 10 ) ) ente c/escritura de bytes.
- * 
  * -----------------------------------------------------------------------------
  * Version 1.0.0 @ 2022-09-12
-  * 
+ * 
  * Para que imprima floats hay que poner en el linker options la opcion
  * -Wl,-u,vfprintf -lprintf_flt -lm
  * https://github.com/microchip-pic-avr-examples/avr128da48-cnano-printf-float-mplab-mcc
@@ -42,6 +50,12 @@
  * 1- Transmitir en modo bloque al hacer un dump.
  * 2- Consumo: entrar en modo tickless
  *
+ * -----------------------------------------------------------------------------
+ * V1.1.1 @ 20240206
+ * -No se estaba respentando el timerpoll.
+ *  El problema estaba en las operaciones de 32 bits en tkSystem.
+ * 
+ * 
  * -----------------------------------------------------------------------------
  * V1.1.0 @ 20230626
  * Hay muchos equipos que no pasan de la configuracion.
@@ -95,7 +109,7 @@
  *  
  */
 
-#include "spxR2.h"
+#include "SPX_AVRDA.h"
 
 
 FUSES = {

@@ -1,7 +1,7 @@
 
 #include "modbus.h"
 #include "math.h"
-#include "spxR2.h"
+#include "SPX_AVRDA.h"
 
 
 static bool f_debug_modbus;

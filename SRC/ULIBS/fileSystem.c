@@ -76,7 +76,8 @@ void FAT_read( fat_s *dstfat)
         pv_fat_flush();
     }
     
-    if ( FAT.length > FF_MAX_RCDS ) {
+    //if ( FAT.length > FF_MAX_RCDS ) {
+    if ( ( FAT.count > FF_MAX_RCDS) || ( FAT.head > FF_MAX_RCDS ) || ( FAT.length > FF_MAX_RCDS) || (FAT.tail > FF_MAX_RCDS) ) {
          pv_fat_flush();
     }
     

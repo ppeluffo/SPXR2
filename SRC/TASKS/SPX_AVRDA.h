@@ -90,11 +90,27 @@ extern "C" {
 #include "valves.h"
 #include "piloto.h"
 
-#define FW_REV "1.1.0"
-#define FW_DATE "@ 20231115"
-#define HW_MODELO "SPXR2 FRTOS R001 HW:AVR128DA64"
+/*
+ * Versión principal: significa actualizaciones o cambios importantes, 
+ *                    que pueden incluir cambios incompatibles con versiones 
+ *                    anteriores.
+ *                    FUNCIONALIDADES
+ * Versión menor: indica actualizaciones más pequeñas con nuevas características
+ *                o mejoras, manteniendo la compatibilidad con versiones 
+ *                anteriores dentro de la misma versión principal.
+ *                PROTOCOLO
+ * Versión de parche: Representa correcciones de errores, parches o actualizaciones 
+ *                    menores que no introducen nuevas características, manteniendo 
+ *                    además la compatibilidad con versiones anteriores dentro 
+ *                    de la misma versión mayor y menor.
+ *                    PATCHES
+ * 
+ */
+#define FW_REV "1.2.0"
+#define FW_DATE "@ 20240403"
+#define HW_MODELO "SPX_AVRDA FRTOS R001 HW:AVR128DA64"
 #define FRTOS_VERSION "FW:FreeRTOS V202111.00"
-#define FW_TYPE "SPXR2"
+#define FW_TYPE "SPX_AVRDA"
 
 #define SYSMAINCLK 24
 
@@ -111,7 +127,7 @@ extern "C" {
 #define tkSys_STACK_SIZE		384
 #define tkRS485A_STACK_SIZE		384
 #define tkRS485B_STACK_SIZE		384
-#define tkWAN_STACK_SIZE        384
+#define tkWAN_STACK_SIZE        512
 #define tkPILOTO_STACK_SIZE		512
 
 #define PILOTO
@@ -200,6 +216,7 @@ bool config_almlevel ( char *s_almlevel );
 void debug_print_rb(void);
 void reset_memory_remote(void);
 uint8_t confbase_hash(void);
+void u_check_stacks_usage(void);
 
 
 #define WAN_RX_BUFFER_SIZE 300

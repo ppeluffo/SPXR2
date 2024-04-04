@@ -7,7 +7,7 @@
  */
 
 
-#include "spxR2.h"
+#include "SPX_AVRDA.h"
 
 dataRcd_s dataRcd, dataRcd_previo;
 
@@ -23,7 +23,7 @@ void check_alarms(dataRcd_s *dataRcd);
 void tkSystem(void * pvParameters)
 {
 
-//TickType_t xLastWakeTime = 0;
+//TickType_t xLastWakeTime = 0;   
 uint32_t waiting_ticks;
 uint8_t i;
 
@@ -50,10 +50,14 @@ uint8_t i;
         //waiting_ticks = (uint32_t)systemConf.timerpoll * 1000 / portTICK_PERIOD_MS;
         //vTaskDelayUntil( &xLastWakeTime, ( TickType_t)( waiting_ticks ));
         // El poleo se lleva 5 secs.
-        waiting_ticks = (uint32_t) ( systemConf.timerpoll * 1000 - PWRSENSORES_SETTLETIME_MS )  / portTICK_PERIOD_MS / 10;
+        waiting_ticks =  systemConf.timerpoll;
+        waiting_ticks *= 1000;
+        waiting_ticks -= PWRSENSORES_SETTLETIME_MS;
+        //xprintf_P(PSTR("DEBUG: waiting_ticks=%lu\r\n"), waiting_ticks);
+        //waiting_ticks = (uint32_t) ( systemConf.timerpoll * 1000 - PWRSENSORES_SETTLETIME_MS )  / portTICK_PERIOD_MS / 10;
         for (i=0; i< 10; i++) {
             kick_wdt(SYS_WDG_bp);
-            vTaskDelay( ( TickType_t)( waiting_ticks ) );
+            vTaskDelay( (waiting_ticks / 10 ) / portTICK_PERIOD_MS );
         }
            
         // Leo datos

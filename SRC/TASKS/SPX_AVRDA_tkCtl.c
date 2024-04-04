@@ -6,7 +6,7 @@
  */
 
 
-#include "spxR2.h"
+#include "SPX_AVRDA.h"
 
 #define TKCTL_DELAY_S	1
 

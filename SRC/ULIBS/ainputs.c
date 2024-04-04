@@ -407,7 +407,7 @@ void ainputs_prender_sensores(void)
      * esta prendido o no.
      */
 
-uint32_t sleep_time_ms;
+TickType_t sleep_time_ms;
 int8_t sp;
 
 	// Lo prendo virtualmente ( solo si estaba en 0 (apagado) y paso a 1 )
@@ -430,8 +430,8 @@ int8_t sp;
     // Normalmente espero 1s de settle time que esta bien para los sensores
 	// pero cuando hay un caudalimetro de corriente, necesita casi 5s
 	// vTaskDelay( ( TickType_t)( 1000 / portTICK_RATE_MS ) );
-    sleep_time_ms = (uint32_t)PWRSENSORES_SETTLETIME_MS / portTICK_PERIOD_MS; 
-    vTaskDelay( ( TickType_t)sleep_time_ms );
+    sleep_time_ms = (TickType_t)PWRSENSORES_SETTLETIME_MS / portTICK_PERIOD_MS; 
+    vTaskDelay( sleep_time_ms );
 }
 //------------------------------------------------------------------------------
 void ainputs_apagar_sensores(void)
@@ -476,7 +476,7 @@ bool ainputs_read_debug(void)
 uint8_t ainputs_hash( ainputs_conf_t *ain )
 {
     
-uint8_t hash_buffer[32];
+uint8_t hash_buffer[64];
 uint8_t i,j;
 uint8_t hash = 0;
 char *p;

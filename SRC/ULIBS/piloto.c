@@ -1,6 +1,6 @@
 
 #include "piloto.h"
-#include "spxR2.h"
+#include "SPX_AVRDA.h"
 #include <stdio.h>
 
 // Configurar ch_pA, ch_pB x cmd y por WAN
